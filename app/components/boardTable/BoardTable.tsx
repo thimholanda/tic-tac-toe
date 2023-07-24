@@ -33,8 +33,10 @@ const BoardTable = () => {
   const [data, setData] = useState<number[]>([]);
   const [user, setUser] = useState<"a" | "b">("a");
   const [isEnded, setIsEnded] = useState(false);
-  const [winnerPosition, setWinnerPosition] = useState<string>("");
+  const [winnerPosition, setWinnerPosition] = useState("");
+  const [winner, setWinner] = useState<"a" | "b" | "">("");
   const [scoreState, dispatchScore] = useReducer(reducer, { a: 0, b: 0 });
+  const [lastUserTurn, setLastUserTurn] = useState<"a" | "b">("a");
 
   const winnerPositions = [
     [0, 3, 6],
@@ -81,19 +83,25 @@ const BoardTable = () => {
     });
 
     if (resultA.includes(true)) {
+      console.log("a");
       setWinnerPosition(String(resultA.indexOf(true)));
       dispatchScore({ type: "addToA" });
-      setIsEnded(true);
-    }
-    if (resultB.includes(true)) {
-      dispatchScore({ type: "addToB" });
-      setWinnerPosition(String(resultB.indexOf(true)));
+      setWinner("a");
       setIsEnded(true);
     }
 
-    if (data.length == 9) {
+    if (resultB.includes(true)) {
+      console.log("b");
+      dispatchScore({ type: "addToB" });
+      setWinnerPosition(String(resultB.indexOf(true)));
+      setWinner("b");
       setIsEnded(true);
-      handleResetGame();
+    }
+
+    if (data.length === 9) {
+      console.log("end");
+      setIsEnded(true);
+      //   handleResetGame();
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,29 +109,38 @@ const BoardTable = () => {
 
   const handleResetGame = () => {
     setPositionsBoard(["", "", "", "", "", "", "", "", ""]);
-    setUser("a");
+    setLastUserTurn((prev) => {
+      return prev === "a" ? "b" : "a";
+    });
     setUserData({ a: [], b: [] });
     setIsEnded(false);
     setData([]);
     setWinnerPosition("");
+    setWinner("");
   };
 
   return (
     <>
       <div className={`${styles.boardContainer}`}>
-        {(!isEnded && (
+        {!isEnded && (
           <h1>
             <span>
               <strong>Current player:</strong>
             </span>{" "}
             {(user === "a" && <AiOutlineClose size="38" />) || (user === "b" && <GrRadial />)}
           </h1>
-        )) ||
-          (!!isEnded && (
-            <button className={styles.buttonReset} onClick={handleResetGame} type="button">
-              <IoRefreshCircleOutline /> <span>Restart game</span>
-            </button>
-          ))}
+        )}
+        {!!isEnded && (
+          <button className={styles.buttonReset} onClick={handleResetGame} type="button">
+            <IoRefreshCircleOutline /> <span>Restart game</span>
+          </button>
+        )}
+        {!!isEnded && !!winner && (
+          <span className={styles.result}>
+            <strong>Winner:</strong> {(winner === "a" && <AiOutlineClose />) || (winner === "b" && <GrRadial />)}
+          </span>
+        )}
+        <span>{!!isEnded && !winner && `Tied`}</span>
         <h2>
           <AiOutlineClose size="30" />
           <span style={{ marginRight: 50 }} className={styles.scoreWrap}>
